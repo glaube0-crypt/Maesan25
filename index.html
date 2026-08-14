@@ -119,7 +119,7 @@
   const CFG = {
     school:"순천매산고등학교 25회",
     title :"5070 추억여행",
-    date  :"2026. 9. 4 ~ 9. 5",
+    date  :"(2026.9.4~5)",
     teal  :"#0A5651", teal2:"#0E6D65", teal3:"#08433F",
     gold  :"#F2C230", cream:"#FFF6DF",
     file  :"매산25회_추억여행"
@@ -145,11 +145,13 @@
   let source=null;      // 촬영된 원본 프레임(캔버스). null이면 라이브
   let names=[], L=null;
 
-  const W = 1080, PADX = 70, PHOTO_Y = 392, MAT = 14; // MAT: 옛날 사진 흰 여백
+  const W = 1080, PADX = 84, PHOTO_Y = 244, MAT = 14; // MAT: 옛날 사진 흰 여백
+  const EM_R = 58, HEAD_CY = 122;                     // 상단 교표(엠블럼)
+  const T1 = 58, T2 = 34;                             // 하단 타이틀 / 날짜 글자 크기
 
   /* ================= 레이아웃 ================= */
   function fitNames(list){
-    const text = list.join("   ·   "), MAXW = W - 150;
+    const text = list.join("   ·   "), MAXW = W - 210;
     for(const s of [48,44,40,36,32,29]){
       meas.font = "700 "+s+"px "+FONT;
       if(meas.measureText(text).width <= MAXW) return {lines:[text], size:s};
@@ -168,16 +170,15 @@
     const ph = Math.round(pw * r.h / r.w);
     const px = PADX, py = PHOTO_Y, pb = py + ph;
     const nl = names.length ? fitNames(names) : null;
-    let nameY=0, dateY, H;
+    let nameY=0, titleY, H;
     if(nl){
-      nameY = pb + MAT + 62;
-      dateY = nameY + (nl.lines.length-1)*(nl.size+14) + 60;
-      H = dateY + 62;
+      nameY  = pb + MAT + 68;
+      titleY = nameY + (nl.lines.length-1)*(nl.size+14) + 86;
     }else{
-      dateY = pb + MAT + 86;
-      H = dateY + 60;
+      titleY = pb + MAT + 104;
     }
-    return {pw,ph,px,py,pb,nl,nameY,dateY,H};
+    H = titleY + 76;
+    return {pw,ph,px,py,pb,nl,nameY,titleY,H};
   }
 
   /* ================= 프레임(사진 뺀 나머지) 그리기 ================= */
@@ -211,13 +212,16 @@
     g.strokeStyle=CFG.gold; g.lineWidth=10; g.strokeRect(26,26,W-52,L.H-52);
     g.strokeStyle="rgba(242,194,48,.55)"; g.lineWidth=2.5; g.strokeRect(46,46,W-92,L.H-92);
 
-    drawEmblem(g,W/2,158,74);
-
+    /* 상단: [교표] 순천매산고등학교 25회 — 한 줄 가운데 정렬 */
+    ls(g,"7px"); g.font="700 42px "+FONT;
+    const sw = g.measureText(CFG.school).width;
+    const gap = 26, groupW = EM_R*2 + gap + sw;
+    const sx0 = (W - groupW)/2;
+    drawEmblem(g, sx0 + EM_R, HEAD_CY, EM_R);
+    g.textAlign="left"; g.textBaseline="middle"; g.fillStyle=CFG.gold;
+    g.fillText(CFG.school, sx0 + EM_R*2 + gap, HEAD_CY + 2);
+    ls(g,"0px");
     g.textAlign="center"; g.textBaseline="alphabetic";
-    g.fillStyle=CFG.gold; ls(g,"9px"); g.font="700 38px "+FONT;
-    g.fillText(CFG.school, W/2+4, 288); ls(g,"0px");
-    g.fillStyle=CFG.cream; g.font="800 66px "+FONT;
-    g.fillText(CFG.title, W/2, 358);
 
     // 옛날 인화사진 느낌의 흰 여백 + 골드 라인
     g.fillStyle=CFG.cream;
@@ -231,13 +235,16 @@
       L.nl.lines.forEach((t,i)=> g.fillText(t, W/2, L.nameY + i*(L.nl.size+14)));
       ls(g,"0px");
     }
-    g.fillStyle="rgba(242,194,48,.92)"; ls(g,"6px"); g.font="600 30px "+FONT;
-    g.fillText(CFG.date, W/2+3, L.dateY); ls(g,"0px");
-    const tw = g.measureText(CFG.date).width;
-    g.strokeStyle="rgba(242,194,48,.5)"; g.lineWidth=2; g.beginPath();
-    g.moveTo(W/2-tw/2-90,L.dateY-10); g.lineTo(W/2-tw/2-30,L.dateY-10);
-    g.moveTo(W/2+tw/2+30,L.dateY-10); g.lineTo(W/2+tw/2+90,L.dateY-10);
-    g.stroke();
+    /* 하단: 5070 추억여행 (2026.9.4~5) — 한 줄 가운데 정렬 */
+    g.textAlign="left";
+    g.font="800 "+T1+"px "+FONT; const w1 = g.measureText(CFG.title).width;
+    g.font="600 "+T2+"px "+FONT; const w2 = g.measureText(CFG.date).width;
+    const sp = 16, x0 = (W - (w1+sp+w2))/2;
+    g.fillStyle=CFG.cream; g.font="800 "+T1+"px "+FONT;
+    g.fillText(CFG.title, x0, L.titleY);
+    g.fillStyle="rgba(242,194,48,.95)"; g.font="600 "+T2+"px "+FONT;
+    g.fillText(CFG.date, x0 + w1 + sp, L.titleY);
+    g.textAlign="center";
 
     cv.width = W; cv.height = L.H;
   }
